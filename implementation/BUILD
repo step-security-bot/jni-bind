@@ -458,6 +458,7 @@ cc_library(
         ":jvm",
         ":object",
         "//:jni_dep",
+        "//base:logging",
         "//implementation/jni_helper",
         "//implementation/jni_helper:jni_array_helper",
     ],

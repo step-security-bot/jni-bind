@@ -38,6 +38,7 @@ static constexpr Class kClass{"kClass"};
 
 jintArray FakeJIntArray() { return reinterpret_cast<jintArray>(0xDADADADADA); }
 
+/*
 ////////////////////////////////////////////////////////////////////////////////
 // Construction Tests.
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,6 +203,41 @@ TEST_F(JniTest, Array_DifferentiatesWithOverloads) {
 
   LocalObject<kClass> obj{jobject{nullptr}};
   obj("Foo", LocalArray<jobject, 1, kClass2>{123, LocalObject<kClass2>{}});
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Multi-Dimensional Construction.
+////////////////////////////////////////////////////////////////////////////////
+TEST_F(JniTest, Array_BuildsFromSizeForMultiDimensionalArray_no_value) {
+  EXPECT_CALL(*env_, NewObjectArray(10, _, FakeJIntArray()));
+
+  LocalArray<jint, 2>{std::size_t{10}, FakeJIntArray()};
+}
+
+TEST_F(JniTest, Array_BuildsFromSizeForMultiDimensionalArray_primitive_xref) {
+  // EXPECT_CALL(*env_, FindClass("[I"));
+  EXPECT_CALL(*env_, NewObjectArray(10, _, FakeJIntArray()));
+
+  LocalArray<jint, 2>{std::size_t{10}, LocalArray<jint>{FakeJIntArray()}};
+}
+
+TEST_F(JniTest, Array_BuildsFromSizeForMultiDimensionalArray_primitive_lvalue) {
+  EXPECT_CALL(*env_, NewObjectArray(10, _, FakeJIntArray()));
+
+  LocalArray<jint> arr{FakeJIntArray()};
+  LocalArray<jint, 2>{std::size_t{10}, arr};
+}
+*/
+
+TEST_F(JniTest, Array_IteratesOverMultipleDimensions) {
+  EXPECT_CALL(*env_, NewObjectArray(10, _, FakeJIntArray()));
+
+  LocalArray<jint, 2> new_array{std::size_t{10}, FakeJIntArray()};
+  for (LocalArray<jint> arr_1d : new_array.Pin()) {
+    for (jint val : arr_1d.Pin()) {
+      LOG(ERROR) << "val << " << val;
+    }
+  }
 }
 
 }  // namespace
