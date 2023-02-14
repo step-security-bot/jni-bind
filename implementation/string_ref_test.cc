@@ -36,12 +36,20 @@ using ::testing::StrEq;
 const char* char_ptr = "TestString";
 
 static constexpr jni::Class kClass{
-    "Class", jni::Method{"Foo", jni::Return<jstring>{}, jni::Params{}}};
+    "Class",
+    jni::Method{"Foo", jni::Return<jstring>{}, jni::Params{}},
+    jni::Method{"TakesStrParam", jni::Return<void>{}, jni::Params<jstring>{}},
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Local String Tests.
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(JniTest, LocalString_NullPtrT) { LocalString str{nullptr}; }
+
+TEST_F(JniTest, LocalString_IsImplicitlyConvertible) {
+  LocalString str{Fake<jstring>()};
+  EXPECT_EQ(static_cast<jstring>(str), Fake<jstring>());
+}
 
 TEST_F(JniTest, LocalString_NullWorks) {
   EXPECT_CALL(*env_, DeleteLocalRef).Times(0);
@@ -98,12 +106,23 @@ TEST_F(JniTest, LocalString_PinsAndUnpinsMemoryForLocals) {
   EXPECT_EQ(utf_string_view.ToString().data(), char_ptr);
 }
 
+TEST_F(JniTest, LocalString_AllowsLValueLocalString) {
+  LocalObject<kClass> obj{};
+  LocalString local_string{"abcde"};
+  obj("TakesStrParam", local_string);
+}
+
+TEST_F(JniTest, LocalString_AllowsRValueLocalString) {
+  LocalObject<kClass> obj{};
+  obj("TakesStrParam", LocalString{"abcde"});
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Global String Tests.
 ////////////////////////////////////////////////////////////////////////////////
-TEST_F(JniTest, GlobalString_NullPtrT) { GlobalString str{nullptr}; }
-
-TEST_F(JniTest, GlobalString_NullWorks) { GlobalString str{jstring{nullptr}}; }
+TEST_F(JniTest, GlobalString_NullWorks) {
+  GlobalString str{AdoptGlobal{}, jstring{nullptr}};
+}
 
 TEST_F(JniTest, GlobalString_ConstructsFromObject) {
   EXPECT_CALL(*env_, DeleteGlobalRef).Times(1);
@@ -114,8 +133,7 @@ TEST_F(JniTest, GlobalString_ConstructsFromObject) {
 
 TEST_F(JniTest, GlobalString_GlobalsReleaseWithGlobalMechanism) {
   EXPECT_CALL(*env_, DeleteGlobalRef);
-
-  GlobalString str{Fake<jstring>()};
+  GlobalString str{AdoptGlobal{}, Fake<jstring>()};
 }
 
 TEST_F(JniTest, GlobalString_ConstructsFromOutputOfMethod) {
@@ -162,6 +180,17 @@ TEST_F(JniTest, GlobalString_PinsAndUnpinsMemoryForLocals) {
   GlobalString str{"TestGlobalString"};
   UtfStringView utf_string_view = str.Pin();
   EXPECT_EQ(utf_string_view.ToString().data(), char_ptr);
+}
+
+TEST_F(JniTest, GlobalString_AllowsLValueGlobalString) {
+  LocalObject<kClass> obj{};
+  GlobalString global_string{"abcde"};
+  obj("TakesStrParam", global_string);
+}
+
+TEST_F(JniTest, GlobalString_AllowsRValueGlobalString) {
+  LocalObject<kClass> obj{};
+  obj("TakesStrParam", GlobalString{"abcde"});
 }
 
 }  // namespace
