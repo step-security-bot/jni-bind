@@ -334,6 +334,7 @@ cc_library(
         ":class",
         ":local_object",
         ":object_ref",
+        ":promotion_mechanics",
         "//:jni_dep",
         "//implementation/jni_helper",
     ],
@@ -356,6 +357,7 @@ cc_library(
     deps = [
         ":global_object",
         ":local_string",
+        ":promotion_mechanics",
         ":ref_base",
         ":string_ref",
         "//:jni_dep",
@@ -537,10 +539,10 @@ cc_library(
     deps = [
         ":class",
         ":class_loader",
-        ":jni_type",
         ":jvm",
         ":jvm_ref",
         ":object_ref",
+        ":promotion_mechanics",
         "//:jni_dep",
         "//implementation/jni_helper",
     ],
@@ -562,6 +564,7 @@ cc_library(
     hdrs = ["local_string.h"],
     deps = [
         ":local_object",
+        ":promotion_mechanics",
         ":ref_base",
         ":string_ref",
         "//:jni_dep",
@@ -732,6 +735,11 @@ cc_library(
 )
 
 cc_library(
+    name = "promotion_mechanics",
+    hdrs = ["promotion_mechanics.h"],
+)
+
+cc_library(
     name = "proxy",
     hdrs = ["proxy.h"],
     deps = [
@@ -803,6 +811,7 @@ cc_library(
         ":default_class_loader",
         ":jvm",
         ":proxy",
+        ":ref_base",
         "//class_defs:java_lang_classes",
     ],
 )
